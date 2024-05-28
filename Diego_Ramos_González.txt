@@ -1,0 +1,81 @@
+DIEGO RAMOS GONZALEZ.
+
+-- Ejercicio 1) (1pto) Apartado único: crear una función/procedimiento (lo que consideres más apropiado de las
+-- dos opciones): cantidad_empleados() que ejecute una consulta sobre la tabla employees y devuelva la cantidad
+-- de empleados que tiene la empresa
+
+CREATE OR REPLACE FUNCTION F_NUMEROEMPLEADOS RETURN NUMBER AS 
+resultado number;
+BEGIN
+SELECT count(*) INTO resultado
+FROM employees;
+ return resultado; 
+END F_NUMEROEMPLEADOS;
+
+
+-- Ejercicio 2) (1pto) Apartado único: Crear una función/procedimiento (lo que consideres más apropiado de las
+-- dos opciones) llamada: precio_medio_categoria() que reciba un único parámetro: nombrecategoria y devuelva
+-- el precio medio de los productos para esa categoría ( obtendrá la información de la tabla categories )
+
+CREATE OR REPLACE FUNCTION precio_medio_categoria (
+    preciomedio IN NUMBER
+) RETURN VARCHAR2 AS
+    resultado NUMBER;
+BEGIN
+    SELECT
+        AVG(unitprice)
+    INTO resultado
+    FROM
+        categories
+        JOIN products ON products.categoryid = categories.categoryid
+
+    GROUP BY
+        products.categoryid;
+
+    RETURN resultado;
+END precio_medio_categoria;
+
+
+-- Ejercicio 4) (total: 3ptos) primero crear una tabla llamada: BACKUP con los campos: FECHA, DML, PRODUCTID, PRODUCTNAMEOLD, PRODUCTNAMENEW, UNITPRICEOLD, UNITPRICENEW
+-- donde PRODUCTNAMENEW Y PRODUCTNAMEOLD son del mismo tipo que PRODUCTS.PRODUCTNAME. UNITPRICEOLD y UNITPRICENEW son del mismo tipo que PRODUCTS.UNITPRICE FECHA es de tipo DATE
+-- Como se puede encontrar en los apuntes, con SYSDATE se obtiene la fecha actual. Se quiere responder a inserciones, modificaciones y borrado de la tabla PRODUCTS.
+
+CREATE TABLE BACKUP 
+(
+FECHA date,
+DML varchar2(10), 
+PRODUCTID NUMBER(10,0), 
+PRODUCTNAMEOLD VARCHAR2(40 CHAR), 
+PRODUCTNAMENEW VARCHAR2(40 CHAR), 
+UNITPRICEOLD FLOAT, 
+UNITPRICENEW FLOAT 
+);
+
+-- a) (0.75pts) si se inserta un producto en la tabla PRODUCTS con los siguientes datos para productid, productname, unitprice: 100, 'almendras', 40 se debe generar automáticamente 
+-- una nueva fila en la tabla BACKUP donde se registre en la columna fecha la fecha en ese momento, en PRODUCTID: 100, en PRODUCTNAMENEW: 'almendras', en PRODUCTPRICENEW: 40
+-- en la columna DML: 'insert' y: null en los otros campos: PRODUCTNAMEOLD, UNITPRICEOLD
+
+CREATE OR REPLACE TRIGGER F_EJERCICIO4 
+BEFORE INSERT ON PRODUCTS 
+for each row
+BEGIN
+  IF (:new.productid = 100 and :new.productname = 'almendras' and :new.unitprice = 40) then
+  INSERT INTO BACKUP (FECHA, DML, PRODUCTID, PRODUCTNAMENEW, UNITPRICENEW) VALUES (sysdate, 'insert', 100, 'almendras', 40);
+  end if;
+END;
+
+d) (0.75ptos) Si se modifica un precio (UNITPRICE) en la tabla PRODUCTS y se trata de poner en negativo
+se lanzará una excepción que impida la modificación
+
+CREATE OR REPLACE TRIGGER F_MODIFICA 
+BEFORE UPDATE ON PRODUCTS 
+for each row
+BEGIN
+  IF (:new.unitprice < 0) then
+  RAISE_application_error(- 2001, 'No se admiten cantidades negativas.');
+  end if;
+END;
+
+
+
+
