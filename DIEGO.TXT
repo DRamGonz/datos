@@ -1,0 +1,85 @@
+
+
+2) (0.5ptos) Dos empleados están hablando y uno dice que ha estado hablando con una tal Elizabeth que
+es la persona de contacto ( ContactName ) de la empresa cliente con quién quería hablar. El compañero le
+dice que él también estuvo hablando con una Elizabeth. Quieren saber cuántas empresas clientes tienen
+como persona de contacto a personas llamadas Elizabeth. Obtener la consulta sql. 
+
+Nota: (Me dice cuantas empresas por eso no pongo ni nombre ni dato de la misma solo indico cuantas)
+
+SELECT count(*) as numero_empresa
+FROM customers a
+WHERE a.ContactName like '%Elizabeth%'
+
+
+3) (0.5ptos) mediante consulta mostrar el nombre de cada país de envío ( shipcountry )
+y la cantidad de pedidos que se realizan para cada uno de esos paises, siempre y cuando esa cantidad sea
+mayor a 10
+
+
+SELECT a.ShipCountry, COUNT(*) as cantidad_Pedido
+from orders a
+GROUP BY a.ShipCountry
+HAVING cantidad_Pedido > 10;
+
+4) Se quiere borrar todos los productos descontinuados ( Discontinued vale "y" o "Y") y ponerlos en una tabla llamada productosdescontinuados
+a) (0.5ptos) consulta para crear una tabla productosdescontinuados que incluya todos los productos descontinuados 
+
+CREATE TABLE productosdescontinuados
+select *
+FROM products
+WHERE products.Discontinued like upper('Y');
+
+
+b) (0.5ptos) consulta para borrar todos los productos descontinuados en la tabla products
+
+TRUNCATE TABLE products
+select *
+FROM products
+WHERE products.Discontinued like upper('N');
+
+5) (0.5ptos) Consulta de modificación para que si hay productos que tienen menos UnitsInStock que
+ReorderLevel se le subirá su precio (unitprice ) un 15%
+
+*****
+
+SELECT sum(a.UnitPrice * (1 * 0,15)) precio_incrementado, a.ProductID
+FROM products a
+JOIN (
+    SELECT a.ProductID
+    FROM products a
+    WHERE a.UnitsInStock < a.ReorderLevel) as  b on b.ProductID = a.ProductID
+GROUP BY a.ProductID
+
+
+6) (0.5ptos) Consulta para mostrar el productid, productname y categoryname de los productos que nunca
+han sido pedidos
+
+*
+SELECT a.ProductID, a.ProductName, categories.CategoryName
+FROM products a
+JOIN categories ON categories.CategoryID = a.CategoryID
+GROUP BY a.ProductID
+HAVING a.ProductID not in (SELECT DISTINCT products.ProductID
+FROM products
+GROUP BY products.ProductID);
+
+
+7) (1pto) Consulta para mostrar el/los paises de los que tengamos más clientes ( Por ejemplo: si el máximo de clientes por pais es 13 y hay dos paises que cumplen esa condición se muestran los dos paises)
+
+
+SELECT COUNT(*) AS numero_cliente, customers.Country
+FROM customers
+GROUP BY customers.Country
+HAVING numero_cliente = (
+	SELECT max(filtro) as cantidad
+    FROM (
+        SELECT COUNT(*) AS filtro
+		FROM customers
+		GROUP BY customers.Country
+    ) as fliltrado
+)
+
+
+
+
